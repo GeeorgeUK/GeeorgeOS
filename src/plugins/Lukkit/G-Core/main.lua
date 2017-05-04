@@ -37,7 +37,7 @@ end
 -- This section actually adds the plugin.
 -- Mark as a local plugin to exclude from /plugins
 
-plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2258", 
+plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2310", 
   function(plugin)
     
     plugin.onEnable( function()
@@ -99,12 +99,14 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2258",
           end
           
           if ( not tonumber(args[1]) and args[1] ~= "0" ) and type(args[1]) == "string" and all == false then
-          
-          
-            sender:sendMessage("§f§m-------[ §cDetails of Commands §7- §c/"..string.lower(args[1]).." §f]§m-------")
-            sender:sendMessage("§eUsage §7- §f"..commands[args[1]].use )
-            sender:sendMessage("§eDescription §7- §f"..commands[args[1]].ldesc )
-            sender:sendMessage("§7Permission §7- §7§o"..commands[args[1]].perm )
+            if commands[args[1]] then
+              sender:sendMessage("§f§m-------[ §cDetails of Commands §7- §c/"..string.lower(args[1]).." §f]§m-------")
+              sender:sendMessage("§eUsage §7- §f"..commands[args[1]].use )
+              sender:sendMessage("§eDescription §7- §f"..commands[args[1]].ldesc )
+              sender:sendMessage("§7Permission §7- §7§o"..commands[args[1]].perm )
+            else
+              sender:sendMessage("§cError: §7Could not find command")
+            end
             return
           end
           
@@ -137,6 +139,11 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2258",
                   sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
                 end
               else
+                if page < last then
+                  sender:sendMessage("§7Type §c/help 2 §7to view the next page")
+                elseif page == last then
+                  sender:sendMessage("§7There are no more commands listed")
+                end
                 return
               end
             end
