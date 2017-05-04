@@ -1,1 +1,11 @@
 
+enable: true
+
+help:
+  per_page: 8
+  show_permissions: true
+  console_shows_all: false
+  show_descriptions: true
+  show_commands_as_usage: false
+  no_perms_hide: true
+  prefix_no_permission: '§8§m'
