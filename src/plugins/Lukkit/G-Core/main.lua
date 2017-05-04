@@ -37,7 +37,7 @@ end
 -- This section actually adds the plugin.
 -- Mark as a local plugin to exclude from /plugins
 
-plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2310", 
+plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2342", 
   function(plugin)
     
     plugin.onEnable( function()
@@ -100,10 +100,11 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2310",
           
           if ( not tonumber(args[1]) and args[1] ~= "0" ) and type(args[1]) == "string" and all == false then
             if commands[args[1]] then
-              sender:sendMessage("§f§m-------[ §cDetails of Commands §7- §c/"..string.lower(args[1]).." §f]§m-------")
-              sender:sendMessage("§eUsage §7- §f"..commands[args[1]].use )
-              sender:sendMessage("§eDescription §7- §f"..commands[args[1]].ldesc )
-              sender:sendMessage("§7Permission §7- §7§o"..commands[args[1]].perm )
+              sender:sendMessage("§f§m-------§f[ §cDetails of Commands §7- §c/"..string.lower(args[1]).." §f]§m-------")
+              sender:sendMessage("§eUsage: "..commands[args[1]].use )
+              sender:sendMessage("§eDescription: §7"..commands[args[1]].ldesc )
+              sender:sendMessage("§eAliases: §f"..table.concat(commands[args[1]].alias, "§7, §f/"))
+              sender:sendMessage("§ePermission: §7§o"..commands[args[1]].perm )
             else
               sender:sendMessage("§cError: §7Could not find command")
             end
@@ -137,6 +138,9 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2310",
               if cmds[n] then
                 if not cmds[n].perm or sender:hasPermission(cmds[n].perm) == true then
                   sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
+                  if plugin.config.get("help.show_permissions") == true and sender:hasPermission(commands.help.perm..".detailed") == true then
+                    sender:sendMessage("§7Requires: §o"..cmds[n].perm)
+                  end
                 end
               else
                 if page < last then
@@ -152,8 +156,11 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2310",
             
             for n = 1, #cmds do
               if cmds[n] then
-                if not cmds[n].perm or sender:hasPermission(cmds[n].perm) == true then
+                if not cmds[n].perm or ( sender:hasPermission(cmds[n].perm) == true and plugin.config.get("help.no_perms_hide") == true ) then
                   sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
+                  if plugin.config.get("help.show_permissions") == true and sender:hasPermission(commands.help.perm..".detailed") == true then
+                    sender:sendMessage("§7Requires: §o"..cmds[n].perm)
+                  end
                 end
               else
                 return
@@ -169,3 +176,4 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2310",
     end
   end
 )   
+   
