@@ -80,97 +80,130 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2342",
         alias={"?","cmds","commands"}
       }
       for _c = 0, #commands.help.alias do
-      plugin.addCommand( commands.help.alias[_c] or commands.help.cmd, commands.help.desc, commands.help.use,
-        function(sender, args)
-          
-          if sender:hasPermission(commands.help.perm) == false then
-            sender:sendMessage(global.noPerm) return
-          end
-          
-          if not args[1] then args[1] = '1' end
-          
-          local all = false
-          if args[1] == "all" and sender:hasPermission(commands.help.perm..".all") == true then
-            all = true
-          end
-          
-          if sender == server:getConsoleSender() and plugin.config.get("help.console_shows_all") == true then
-            all = true
-          end
-          
-          if ( not tonumber(args[1]) and args[1] ~= "0" ) and type(args[1]) == "string" and all == false then
-            if commands[args[1]] then
-              sender:sendMessage("§f§m-------§f[ §cDetails of Commands §7- §c/"..string.lower(args[1]).." §f]§m-------")
-              sender:sendMessage("§eUsage: "..commands[args[1]].use )
-              sender:sendMessage("§eDescription: §7"..commands[args[1]].ldesc )
-              sender:sendMessage("§eAliases: §f"..table.concat(commands[args[1]].alias, "§7, §f/"))
-              sender:sendMessage("§ePermission: §7§o"..commands[args[1]].perm )
+        plugin.addCommand( commands.help.alias[_c] or commands.help.cmd, commands.help.desc, commands.help.use,
+          function(sender, args)
+
+            if sender:hasPermission(commands.help.perm) == false then
+              sender:sendMessage(global.noPerm) return
+            end
+
+            if not args[1] then args[1] = '1' end
+
+            local all = false
+            if args[1] == "all" and sender:hasPermission(commands.help.perm..".all") == true then
+              all = true
+            end
+
+            if sender == server:getConsoleSender() and plugin.config.get("help.console_shows_all") == true then
+              all = true
+            end
+
+            if ( not tonumber(args[1]) and args[1] ~= "0" ) and type(args[1]) == "string" and all == false then
+              if commands[args[1]] then
+                sender:sendMessage("§f§m-------§f[ §cDetails of Commands §7- §c/"..string.lower(args[1]).." §f]§m-------")
+                sender:sendMessage("§eUsage: "..commands[args[1]].use )
+                sender:sendMessage("§eDescription: §7"..commands[args[1]].ldesc )
+                sender:sendMessage("§eAliases: §f"..table.concat(commands[args[1]].alias, "§7, §f/"))
+                sender:sendMessage("§ePermission: §7§o"..commands[args[1]].perm )
+              else
+                sender:sendMessage("§cError: §7Could not find command")
+              end
+              return
+            end
+
+            local cmds = {}
+            for a, b in global.spairs(commands) do
+              table.insert(cmds, b)
+            end
+
+            local page = tonumber(args[1]) or 1
+            local per_page = plugin.config.get("help.per_page") or 8
+            local start = ( (per_page * ( page - 1 ) + 1 ) ) or 1
+            local finish = ( per_page * page ) or 1
+            local last = math.ceil( #cmds / per_page )
+
+            if all == false then
+              sender:sendMessage("§f§m-------§f[ §cCommand Reference §7- §fPage §c"..page.." §fof §c"..last.." §f]§m-------")
+            elseif all == true then
+              sender:sendMessage("§f§m-------§f[ §cCommand Reference §7- §fDisplaying §c"..#cmds.." commands §f]§m-------")
+            end
+
+            if all == false then
+
+              if ( tonumber(page) > tonumber(last) ) or ( tonumber(page) < 1 ) then
+                sender:sendMessage("§7No commands were found on this page") return
+              end
+
+              for n = start, finish do
+                if cmds[n] then
+                  if not cmds[n].perm or sender:hasPermission(cmds[n].perm) == true then
+                    sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
+                    if plugin.config.get("help.show_permissions") == true and sender:hasPermission(commands.help.perm..".detailed") == true then
+                      sender:sendMessage("§7Requires: §o"..cmds[n].perm)
+                    end
+                  end
+                else
+                  if page < last then
+                    sender:sendMessage("§7Type §c/help 2 §7to view the next page")
+                  elseif page == last then
+                    sender:sendMessage("§7There are no more commands listed")
+                  end
+                  return
+                end
+              end
+
             else
-              sender:sendMessage("§cError: §7Could not find command")
-            end
-            return
-          end
-          
-          local cmds = {}
-          for a, b in global.spairs(commands) do
-            table.insert(cmds, b)
-          end
-          
-          local page = tonumber(args[1]) or 1
-          local per_page = plugin.config.get("help.per_page") or 8
-          local start = ( (per_page * ( page - 1 ) + 1 ) ) or 1
-          local finish = ( per_page * page ) or 1
-          local last = math.ceil( #cmds / per_page )
-          
-          if all == false then
-            sender:sendMessage("§f§m-------§f[ §cCommand Reference §7- §fPage §c"..page.." §fof §c"..last.." §f]§m-------")
-          elseif all == true then
-            sender:sendMessage("§f§m-------§f[ §cCommand Reference §7- §fDisplaying §c"..#cmds.." commands §f]§m-------")
-          end
-          
-          if all == false then
-            
-            if ( tonumber(page) > tonumber(last) ) or ( tonumber(page) < 1 ) then
-              sender:sendMessage("§7No commands were found on this page") return
-            end
-            
-            for n = start, finish do
-              if cmds[n] then
-                if not cmds[n].perm or sender:hasPermission(cmds[n].perm) == true then
-                  sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
-                  if plugin.config.get("help.show_permissions") == true and sender:hasPermission(commands.help.perm..".detailed") == true then
-                    sender:sendMessage("§7Requires: §o"..cmds[n].perm)
+
+              for n = 1, #cmds do
+                if cmds[n] then
+                  if not cmds[n].perm or ( sender:hasPermission(cmds[n].perm) == true and plugin.config.get("help.no_perms_hide") == true ) then
+                    sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
+                    if plugin.config.get("help.show_permissions") == true and sender:hasPermission(commands.help.perm..".detailed") == true then
+                      sender:sendMessage("§7Requires: §o"..cmds[n].perm)
+                    end
                   end
+                else
+                  return
                 end
-              else
-                if page < last then
-                  sender:sendMessage("§7Type §c/help 2 §7to view the next page")
-                elseif page == last then
-                  sender:sendMessage("§7There are no more commands listed")
-                end
-                return
               end
             end
             
-          else
             
-            for n = 1, #cmds do
-              if cmds[n] then
-                if not cmds[n].perm or ( sender:hasPermission(cmds[n].perm) == true and plugin.config.get("help.no_perms_hide") == true ) then
-                  sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
-                  if plugin.config.get("help.show_permissions") == true and sender:hasPermission(commands.help.perm..".detailed") == true then
-                    sender:sendMessage("§7Requires: §o"..cmds[n].perm)
-                  end
-                end
-              else
-                return
-              end
-            end
             
           end
-          
-        end
-      )
+        )
+      end
+      
+      commands["plugins"], commands[#commands+1] = {
+        cmd="plugins",
+        desc="Display's a list of plugins",
+        ldesc="Show's a list of plugins installed on the server. Good to know what you can do! Non Lukkit plugins can be added in the configuration file.",
+        use="/plugins",
+        perm="g-core.plugins",
+        alias={"pl","mods","modules","plukkins","plk", "md"}
+      }
+      
+      for _c = 0, #commands.plugins.alias do
+        
+        plugin.addCommand( commands.plugins.alias[_c] or commands.plugins.cmd, commands.plugins.desc, commands.plugins.use,
+          function(sender, args)
+            
+            if sender:hasPermission(commands.plugins.perm) == false then
+              sender:sendMessage(global.noPerm) return
+            end
+            
+            local pl = {}
+            
+            for n = 1, #plugins do
+              local str = string.gsub( plugins[n].path, "plugins/Lukkit/", "")
+              table.insert(pl, str)
+            end
+            
+            sender:sendMessage("§eModules: §f"..table.concat(pl, "§7, §f"))
+            
+          end
+        )
+        
       end
       
     end
