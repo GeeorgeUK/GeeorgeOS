@@ -37,7 +37,7 @@ end
 -- This section actually adds the plugin.
 -- Mark as a local plugin to exclude from /plugins
 
-plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2201", 
+plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2258", 
   function(plugin)
     
     plugin.onEnable( function()
@@ -71,15 +71,16 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2201",
       
       -- SHOW A LIST OF COMMANDS ON THE SERVER
       
-      commands[#commands+1], commands.help = { 
-        cmd="help",
-        desc="Display's a list of commands",
-        ldesc="Display a list of commands. Show advanced usage about a command by typing /help {command}",
-        use="/help [page|{command}]",
+      commands["help"], commands[#commands+1] = {
+        cmd="help", 
+        desc="Display's a list of commands", 
+        ldesc="Display a list of commands. You can either specify a command to show detailed information, or enter a page number to list some commands. Use the parameter 'all' to show all commands.", 
+        use="/help [[page]|{command}|all]", 
         perm="g-core.help",
+        alias={"?","cmds","commands"}
       }
-      
-      plugin.addCommand( commands.help.cmd, commands.help.desc, commands.help.use,
+      for _c = 0, #commands.help.alias do
+      plugin.addCommand( commands.help.alias[_c] or commands.help.cmd, commands.help.desc, commands.help.use,
         function(sender, args)
           
           if sender:hasPermission(commands.help.perm) == false then
@@ -89,7 +90,7 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2201",
           if not args[1] then args[1] = '1' end
           
           local all = false
-          if not args[1] == "all" and sender:hasPermission(commands.help.perm..".all") == true then
+          if args[1] == "all" and sender:hasPermission(commands.help.perm..".all") == true then
             all = true
           end
           
@@ -97,14 +98,19 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2201",
             all = true
           end
           
-          if tonumber(args[1]) == 0 and args[1] ~= "0" then
-            sender:sendMessage("§f§m----------[ §cDetails of Command §7- §c/"..string.lower(commands[args[1]]).." §f]§m----------")
+          if ( not tonumber(args[1]) and args[1] ~= "0" ) and type(args[1]) == "string" and all == false then
+          
+          
+            sender:sendMessage("§f§m-------[ §cDetails of Commands §7- §c/"..string.lower(args[1]).." §f]§m-------")
+            sender:sendMessage("§eUsage §7- §f"..commands[args[1]].use )
+            sender:sendMessage("§eDescription §7- §f"..commands[args[1]].ldesc )
+            sender:sendMessage("§7Permission §7- §7§o"..commands[args[1]].perm )
             return
           end
           
           local cmds = {}
           for a, b in global.spairs(commands) do
-            table.insert(cmd, b)
+            table.insert(cmds, b)
           end
           
           local page = tonumber(args[1]) or 1
@@ -113,22 +119,22 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2201",
           local finish = ( per_page * page ) or 1
           local last = math.ceil( #cmds / per_page )
           
-          if all == true then
-            sender:sendMessage("§f&m----------§f[ §cCommand Reference §7- §cPage "..page.." of "..last.." §f]§m----------")
-          elseif all == false then
-            sender:sendMessage("§f§m----------§f[ §cCommand Reference §7- §cDisplaying "..#cmds.." commands §f]§m----------")
+          if all == false then
+            sender:sendMessage("§f§m-------§f[ §cCommand Reference §7- §fPage §c"..page.." §fof §c"..last.." §f]§m-------")
+          elseif all == true then
+            sender:sendMessage("§f§m-------§f[ §cCommand Reference §7- §fDisplaying §c"..#cmds.." commands §f]§m-------")
           end
           
           if all == false then
             
-            if ( tonumber(page) > tonumber(lastpage) ) or ( tonumber(page) < 1 ) then
+            if ( tonumber(page) > tonumber(last) ) or ( tonumber(page) < 1 ) then
               sender:sendMessage("§7No commands were found on this page") return
             end
             
             for n = start, finish do
               if cmds[n] then
                 if not cmds[n].perm or sender:hasPermission(cmds[n].perm) == true then
-                  sender:sendMessage("§e/"..cmds[n].cmd.." §7"..cmds[n].desc)
+                  sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
                 end
               else
                 return
@@ -140,7 +146,7 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2201",
             for n = 1, #cmds do
               if cmds[n] then
                 if not cmds[n].perm or sender:hasPermission(cmds[n].perm) == true then
-                  sender:sendMessage("§e/"..cmds[n].cmd.." §7"..cmds[n].desc)
+                  sender:sendMessage("§e/"..cmds[n].cmd.." §f"..cmds[n].desc)
                 end
               else
                 return
@@ -151,7 +157,8 @@ plugins[ #plugins+1 ] = lukkit.addPlugin( "G-Core", "Core-1.0_5.04.2201",
           
         end
       )
+      end
       
     end
   end
-)
+)   
